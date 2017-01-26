@@ -15,14 +15,10 @@ logging = root_logger.getLogger(__name__)
 import numpy as np
 import pandas
 import networkx as nx
-#import cairocffi as cairo
+import cairocffi as cairo
 import utils
 from collections import namedtuple
 import pyqtree
-import gi
-gi.require_version('Gtk','3.0')
-from gi.repository import Gtk
-
 
 #CONSTANTS:
 N = 8
@@ -40,18 +36,12 @@ qtree = pyqtree.Index(bbox=bounds)
 #matches = qtree.intersect(bbox)
 
 #CAIRO: --------------------
-# logging.info("Setting up Cairo")
-# surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, X,Y)
-# ctx = cairo.Context(surface)
-# ctx.scale(X,Y) #coords in 0-1 range
-
-#GTK: --------------------
+logging.info("Setting up Cairo")
+surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, X,Y)
+ctx = cairo.Context(surface)
+ctx.scale(X,Y) #coords in 0-1 range
 
 #Utility functions:
-def write_image_and_exit(*args):
-    utils.write_to_png(surface,OUTPUT_FILE)
-    Gtk.main_quit(*args)
-               
 def getNeighbourhood(node_coords):
     """
     for a given new node, get nodes local to it spatially
@@ -85,16 +75,6 @@ def draw_rect(ctx):
 
 if __name__ == "__main__":
     logging.info("Performing main")
-    logging.info("Seting up Gtk")
-    window = Gtk.Window()
-    window.resize(X,Y)
-    subwin = window.get_window()
-    cr = subwin.cairo_create()
-    #darea = Gtk.DrawingArea()
-    #window.add(darea)
-    #window.connect("destroy",write_image_and_exit)
-    window.connect('draw',draw_rect)
-    window.show_all()
-    #darea.connect('draw',draw_rect)
-    Gtk.main()
-    
+    ctx.set_source_rgba(0,1,1,0.8)
+    utils.drawRect(ctx,0.2,0.2,0.8,0.8)
+    utils.write_to_png(surface,OUTPUT_FILE)
