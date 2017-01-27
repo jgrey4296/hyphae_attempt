@@ -28,8 +28,10 @@ ALPHA = 0.1
 BACKGROUND = [0,0,0,1]
 FRONT = [0.8,0.1,0.71,ALPHA]
 TWOPI = 2 * pi
+QUARTERPI = pi * 0.5
 THREEFOURTHSTWOPI = 3/4 * TWOPI
 EPSILON = sys.float_info.epsilon
+
 
 def write_to_png(surface,filename,i=None):
     if i:
@@ -543,3 +545,15 @@ def drawText(ctx,x,y,string):
     ctx.set_source_rgba(*TEXT)
     ctx.move_to(x+offset,y+offset)
     ctx.show_text(str(string))
+
+
+def randomRad(min=-TWOPI,max=TWOPI):
+    return min + (np.random.random() * (max-min)) 
+
+def rotMatrix(rad):
+    return np.array([[cos(rad),-sin(rad)],
+                     [sin(rad),cos(rad)]])
+
+def rotatePoint(p1,p2,radMin=-QUARTERPI,radMax=QUARTERPI):
+    rad = randomRad(min=radMin,max=radMax)
+    return p1 + ((p2-p1) @ rotMatrix(rad))
