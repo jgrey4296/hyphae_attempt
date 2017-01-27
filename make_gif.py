@@ -44,6 +44,7 @@ for filename in files:
 
 imageio.mimsave(join(GIF_OUTPUT,GIF_NAME),images,'GIF-FI')
 
+#Alternative:
 # with imageio.get_writer(join(GIF_OUTPUT,GIF_NAME), mode='I') as writer:
 #     for filename in files:
 #         image = imageio.imread(join(OUTPUT_DIR,filename))
