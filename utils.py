@@ -303,16 +303,17 @@ def get_distance(p1,p2):
     sqrtd = np.sqrt(summed)
     return sqrtd
 
-
+def get_distance_xyxy(x1,y1,x2,y2):
+    return get_distance_raw(np.array([x1,y1]),np.array([x2,y2]))[0]
 
 
 def get_normal(p1,p2):
     """ Get the normalized direction from two points """
-    d = get_distance(p1,p2)
-    if np.allclose(d,0):
+    v = (p2-p1)
+    norm = np.linalg.norm(v)
+    if np.allclose(norm,0):
         return np.array([0,0])
-    n = (p2-p1)
-    normalized = n / d
+    normalized = v / norm
     return normalized
 
 
