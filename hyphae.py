@@ -160,6 +160,11 @@ def grow():
         normalized = utils.get_normal(predecessor['loc'],focusNode['loc'])
         newPoint = focusNode['loc'] + (normalized * (NODE_START_SIZE * 1.2))
         #todo: add wiggle
+        if True or random() < WIGGLE_CHANCE:
+            newPoint = utils.rotatePoint(focusNode['loc'],newPoint,
+                                         radMin=-(WIGGLE_AMNT + WIGGLE_VARIANCE),
+                                         radMax=(WIGGLE_AMNT + WIGGLE_VARIANCE))
+        
         
     #move along that vector
     #check for intersections and being too close
