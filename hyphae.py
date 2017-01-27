@@ -71,7 +71,7 @@ ctx.scale(X,Y) #coords in 0-1 range
 
 #Utility functions:
 def createNode(location,d):
-    logging.info("Creating a node for location: {}".format(location))
+    logging.debug("Creating a node for location: {}".format(location))
     global allNodes, graph, frontier, qtree
     newNode = {'loc':location, 'd':d,'uuid': uuid1()}
     allNodes[newNode['uuid']] = newNode
@@ -103,7 +103,7 @@ def getNeighbourhood(x,y):
     delta = NODE_START_SIZE * 0.5
     bbox = [x-delta,y-delta,
             x+delta,y+delta]
-    logging.info("Neighbourhood of ({},{}) -> bbox {}".format(x,y, bbox))
+    logging.debug("Neighbourhood of ({},{}) -> bbox {}".format(x,y, bbox))
     matches = qtree.intersect(bbox)
     return matches
 
@@ -124,9 +124,9 @@ def doNodePairsIntersect(node1a,node1b,node2a,node2b):
 
 
 def allFrontiersAreAtBoundary():
-    logging.info("Checking {} frontiers are at boundary".format(len(frontier)))
+    global frontier
+    logging.debug("Checking {} frontiers are at boundary".format(len(frontier)))
     #distance check all nodes in the frontier
-    #  d(START_NODE,FRONTIER_NODE) < HYPHAE_CIRC
     nodesFromUUIDS = [allNodes[x] for x in frontier]
     distances = [utils.get_distance_raw(x['loc'],START) for x in nodesFromUUIDS]
     logging.info("Distances: {}".format(distances))
@@ -155,7 +155,7 @@ def grow():
         normalized = utils.get_normal(focusNode['loc'],rndVec)
         newPoint = focusNode['loc'] + (normalized * (NODE_START_SIZE * 1.2))
     else:
-        logging.info("Extending vector")
+        logging.debug("Extending vector")
         #create a vector out of the pair / Alt: move -> d(p,x) < d(n,x)
         predecessor = allNodes[predecessorUUIDS[0]]
         normalized = utils.get_normal(predecessor['loc'],focusNode['loc'])
@@ -200,8 +200,8 @@ def draw_hyphae():
         #todo: get a line between currentNode and predecessor
         #draw the node / line
         ctx.set_source_rgba(*[1,i,1,1])
-        logging.info("Circle: {:.2f}, {:.2f}".format(*currentNode['loc']))
-        utils.drawCircle(ctx,*currentNode['loc'],currentNode['d'])
+        logging.debug("Circle: {:.2f}, {:.2f}".format(*currentNode['loc']))
+        utils.drawCircle(ctx,*currentNode['loc'],currentNode['d']-0.004)
         #get it's children
         nodes.extend(graph.successors(currentUUID))
         if i == 0:
