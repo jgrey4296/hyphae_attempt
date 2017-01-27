@@ -128,13 +128,12 @@ def allFrontiersAreAtBoundary():
     logging.debug("Checking {} frontiers are at boundary".format(len(frontier)))
     #distance check all nodes in the frontier
     nodesFromUUIDS = [allNodes[x] for x in frontier]
-    distances = [utils.get_distance_raw(x['loc'],START) for x in nodesFromUUIDS]
-    logging.info("Distances: {}".format(distances))
-    distanceSufficientFromCentre = [x > HYPHAE_CIRC for x in distances]
-    logging.info("Sufficient: {}".format(distanceSufficientFromCentre))
-    value = all(distanceSufficientFromCentre)
-    logging.info("It is {} that all frontier nodes are at boundary".format(value))
-    return value
+    distances = [utils.get_distance(x['loc'],START) for x in nodesFromUUIDS]
+    paired = zip(frontier,distances)
+    logging.debug("Distances: {}".format(distances))
+    #filter the frontier:
+    frontier = deque([x for x,y in paired if y < HYPHAE_CIRC])
+    return len(frontier) == 0
 
 
 
