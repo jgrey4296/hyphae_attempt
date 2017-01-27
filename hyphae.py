@@ -171,12 +171,19 @@ def grow():
     intersections = [x for x in getNeighbourhood(*newPoint) if x not in predecessorUUIDS and x != focusNodeUUID]
     if len(intersections) != 0:
         logging.info("There are {} intersections, not adding a new node".format(len(intersections)))
-        return True
+        #Create and add this node, but as a leaf that doesnt get drawn
+        return False
         #while fail the above check, wiggle the vector
     
     #Split branch based on split chance
-    if random() > SPLIT_CHANCE:
-        newPositions = [newPoint]
+    if random() < SPLIT_CHANCE:
+        s1 = utils.rotatePoint(focusNode['loc'],newPoint,
+                               radMin=-(SPLIT_ANGLE+SPLIT_ANGLE_VARIANCE),
+                               radMax=-(SPLIT_ANGLE+SPLIT_ANGLE_VARIANCE))
+        s2 = utils.rotatePoint(focusNode['loc'],newPoint,
+                               radMin=SPLIT_ANGLE+SPLIT_ANGLE_VARIANCE,
+                               radMax=SPLIT_ANGLE+SPLIT_ANGLE_VARIANCE)
+        newPositions = [s1,s2]
     else:
         newPositions = [newPoint]
     #add new node/nodes to frontier,
