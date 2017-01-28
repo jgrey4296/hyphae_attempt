@@ -73,10 +73,11 @@ ctx = cairo.Context(surface)
 ctx.scale(X,Y) #coords in 0-1 range
 
 #Utility functions:
-def createNode(location,d):
+def createNode(location,d,distance=0):
     logging.debug("Creating a node for location: {}".format(location))
     global allNodes, graph, frontier, qtree
-    newNode = {'loc':location, 'd':d,'uuid': uuid1()}
+    newNode = {'loc':location, 'd':d,'uuid': uuid1(), 'remaining':MAX_ATTEMPTS_PER_NODE,
+               'distance_from_branch': distance, 'perpendicular' : False}
     allNodes[newNode['uuid']] = newNode
     graph.add_node(newNode['uuid'])
     frontier.append(newNode['uuid'])
