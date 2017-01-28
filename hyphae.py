@@ -55,6 +55,7 @@ node_colour = lambda : np.concatenate((random(3),[NODE_OPACITY]))
 
 logging.info("Setting up Graph and QuadTree")
 allNodes = {}
+branchPoints = []
 #Keep track of nodes in a directed graph
 graph = nx.DiGraph()
 #check for neighbours with the qtree 
