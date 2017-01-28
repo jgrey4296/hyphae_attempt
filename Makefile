@@ -6,8 +6,8 @@ static:
 	open ./output
 
 clean:
-	rm output/*.png
-	rm *.gif
+	-rm output/*.png
+	-rm *.gif
 
 gif:
 	python make_gif.py
