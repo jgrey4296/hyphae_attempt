@@ -22,7 +22,8 @@ from collections import namedtuple, deque
 import pyqtree
 import math
 from uuid import uuid1
-from random import random
+from random import choice
+from numpy.random import random
 import IPython
 
 #CONSTANTS:
