@@ -1,10 +1,11 @@
 #import cairocffi as cairo
 import math
-from math import sin,cos,atan2
+from math import atan2
 from random import choice
 import numpy as np
 from numpy import pi
 from numpy.random import random
+from numpy import sin,cos
 from scipy.interpolate import splprep
 from scipy.interpolate import splev
 import IPython
