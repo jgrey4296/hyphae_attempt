@@ -51,6 +51,7 @@ def verify_bbox(x,y):
             x+VERIFY_LAMBDA,
             y+VERIFY_LAMBDA]
 
+node_colour = lambda : np.concatenate((random(3),[NODE_OPACITY]))
 
 logging.info("Setting up Graph and QuadTree")
 allNodes = {}
