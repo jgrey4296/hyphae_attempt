@@ -558,3 +558,6 @@ def rotMatrix(rad):
 def rotatePoint(p1,p2,radMin=-QUARTERPI,radMax=QUARTERPI):
     rad = randomRad(min=radMin,max=radMax)
     return p1 + ((p2-p1) @ rotMatrix(rad))
+
+def clamp(n,minn,maxn):
+    return max(min(maxn,n),minn)
