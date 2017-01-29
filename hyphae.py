@@ -179,14 +179,12 @@ def grow():
         #create a vector out of the pair / Alt: move -> d(p,x) < d(n,x)
         predecessor = allNodes[predecessorUUIDS[0]]
         normalized = utils.get_normal(predecessor['loc'],focusNode['loc'])
-        newPoint = focusNode['loc'] + (normalized * (NODE_START_SIZE * 1.2))
+        newPoint = focusNode['loc'] + (normalized * (2*focusNode['d']))
         #todo: add wiggle
-        if True or random() < WIGGLE_CHANCE:
+        if random() < WIGGLE_CHANCE:
             newPoint = utils.rotatePoint(focusNode['loc'],newPoint,
                                          radMin=-(WIGGLE_AMNT + WIGGLE_VARIANCE),
                                          radMax=(WIGGLE_AMNT + WIGGLE_VARIANCE))
-        
-        
     #move along that vector
     #check for intersections and being too close
     intersections = [x for x in getNeighbourhood(*newPoint) if x not in predecessorUUIDS and x != focusNodeUUID]
