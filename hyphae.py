@@ -188,17 +188,21 @@ def grow():
 
     #Split branch based on split chance
     if random() < SPLIT_CHANCE:
-        s1 = utils.rotatePoint(focusNode['loc'],newPoint,
+        s1 = utils.rotatePoint(focusNode['loc'], newPoint,
                                radMin=-(SPLIT_ANGLE+SPLIT_ANGLE_VARIANCE),
                                radMax=-(SPLIT_ANGLE+SPLIT_ANGLE_VARIANCE))
-        s2 = utils.rotatePoint(focusNode['loc'],newPoint,
+        s2 = utils.rotatePoint(focusNode['loc'], newPoint,
                                radMin=SPLIT_ANGLE+SPLIT_ANGLE_VARIANCE,
                                radMax=SPLIT_ANGLE+SPLIT_ANGLE_VARIANCE)
-        newPositions = [s1,s2]
+        newPositions = [s1, s2]
+        decay = NODE_SIZE_DECAY
+        distance_from_branch = 0
+        
+        
     else:
         newPositions = [newPoint]
-    #add new node/nodes to frontier,
-    #node pairs are mirrored either side of the canonical next node
+        decay = 0.0
+        distance_from_branch = focusNode['distance_from_branch'] + 1
 
         logging.debug("There are {} intersections, not adding a new node".format(len(neighbours)))
         focusNode['remaining'] = focusNode['remaining']-1
