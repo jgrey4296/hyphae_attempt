@@ -154,7 +154,7 @@ def allFrontiersAreAtBoundary():
 #Main Growth function:
 def grow():
     global graph
-    logging.info("Growing")
+    logging.debug("Growing")
     #pick a frontier node
     focusNodeUUID = frontier.popleft()
     focusNode = allNodes[focusNodeUUID]
@@ -162,7 +162,7 @@ def grow():
     predecessorUUIDS = getPredecessorUUIDS(focusNodeUUID)
     if len(predecessorUUIDS) == 0:
         #no predecessor, pick a random direction
-        logging.info("No predecessor, picking random direction")
+        logging.debug("No predecessor, picking random direction")
         #todo: rotate around the point
         rndVec = focusNode['loc'] + np.random.random(2) - 0.5
         normalized = utils.get_normal(focusNode['loc'],rndVec)
@@ -203,6 +203,8 @@ def grow():
     #add new node/nodes to frontier,
     #node pairs are mirrored either side of the canonical next node
 
+        logging.debug("There are {} intersections, not adding a new node".format(len(neighbours)))
+        focusNode['remaining'] = focusNode['remaining']-1
     #create the nodes
     newNodes = [createNode(x,NODE_START_SIZE) for x in newPositions]
     for x in newNodes:
@@ -212,7 +214,7 @@ def grow():
     return False
 
 def draw_hyphae():
-    logging.info("Drawing")
+    logging.debug("Drawing")
     #clear the context
     utils.clear_canvas(ctx)
     #from the root node of the graph
