@@ -218,9 +218,13 @@ def grow():
     
     #add new node/nodes to frontier,
     #create the nodes
-    newNodes = [createNode(x,NODE_START_SIZE) for x in newPositions]
+    newNodes = [createNode(x,focusNode['d']-decay,distance_from_branch) for x in newPositions]
     for x in newNodes:
         graph.add_edge(focusNodeUUID,x['uuid'])
+
+    if len(newNodes) > 1:
+        branchPoints.append(focusNode['uuid'])
+
     #occasionally backtrack from a branch point:
     if random() < BRANCH_BACKTRACK_AMNT and len(branchPoints) > 0:
         rndBranch = choice(branchPoints)
