@@ -185,15 +185,7 @@ def grow():
             newPoint = utils.rotatePoint(focusNode['loc'],newPoint,
                                          radMin=-(WIGGLE_AMNT + WIGGLE_VARIANCE),
                                          radMax=(WIGGLE_AMNT + WIGGLE_VARIANCE))
-    #move along that vector
-    #check for intersections and being too close
-    intersections = [x for x in getNeighbourhood(*newPoint) if x not in predecessorUUIDS and x != focusNodeUUID]
-    if len(intersections) != 0:
-        logging.info("There are {} intersections, not adding a new node".format(len(intersections)))
-        #Create and add this node, but as a leaf that doesnt get drawn
-        return False
-        #while fail the above check, wiggle the vector
-    
+
     #Split branch based on split chance
     if random() < SPLIT_CHANCE:
         s1 = utils.rotatePoint(focusNode['loc'],newPoint,
