@@ -236,6 +236,26 @@ def draw_hyphae():
             
     return True
 
+def draw_hyphae_2():
+    logging.debug("Drawing alternate")
+    utils.clear_canvas(ctx)
+    nodes = deque(graph.successors(root['uuid']))
+    #BFS the tree:
+    ctx.set_source_rgba(*MAIN_COLOUR)
+    while len(nodes) > 0:
+        currentUUID = nodes.popleft()
+        currentNode = allNodes[currentUUID]
+        prev = allNodes[graph.predecessors(currentNode['uuid'])[0]]
+        points = utils.createLine(*currentNode['loc'], *prev['loc'],LINE_DISTORTION_UPSCALING)
+        length_of_line = np.linalg.norm(points[-1] - points[0])
+        distorted = utils.displace_along_line(points,length_of_line * LINE_PROPORTION_DISTORTION,LINE_DISTORTION_UPSCALING)
+        nodes.extend(graph.successors(currentUUID))
+        for x,y in distorted:
+            utils.drawCircle(ctx,x,y,MIN_NODE_SIZE)
+        #for x,y in points:
+        #    utils.drawCircle(ctx,x,y,utils.clamp(currentNode['d']-SIZE_DIFF,MIN_NODE_SIZE,NODE_START_SIZE))
+
+    return True
 
 if __name__ == "__main__":
     logging.info('Starting main')
