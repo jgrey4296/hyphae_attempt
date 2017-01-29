@@ -237,6 +237,18 @@ def vary(xys,stepSize,pix):
     return xysPrime
 
 
+def displace_along_line(xys,amnt,num):
+    t = np.linspace(0,2*pi,num)
+    rotation = np.column_stack((sin(t),cos(t)))
+    rnd = np.random.random(num)
+    combined = np.column_stack((rotation[:,0] * rnd, rotation[:,1] * rnd))
+    scaled = amnt * combined
+    mod_points = xys + scaled
+    all_points = np.concatenate((xys,mod_points))
+    return all_points
+    
+    
+
 def sampleAlongLine(x,y,ex,ey,t):
     o_x = (1 - t) * x + t * ex
     o_y = (1 - t) * y + t * ey
