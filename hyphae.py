@@ -171,9 +171,9 @@ def grow():
         #no predecessor, pick a random direction
         logging.debug("No predecessor, picking random direction")
         #todo: rotate around the point
-        rndVec = focusNode['loc'] + np.random.random(2) - 0.5
+        rndVec = focusNode['loc'] + (np.random.random(2) - 0.5)
         normalized = utils.get_normal(focusNode['loc'],rndVec)
-        newPoint = focusNode['loc'] + (normalized * (NODE_START_SIZE * 1.2))
+        newPoint = focusNode['loc'] + (normalized * (2 * focusNode['d']))
     else:
         logging.debug("Extending vector")
         #create a vector out of the pair / Alt: move -> d(p,x) < d(n,x)
