@@ -160,7 +160,14 @@ def grow():
     focusNode = allNodes[focusNodeUUID]
     #get its predecessor
     predecessorUUIDS = getPredecessorUUIDS(focusNodeUUID)
-    if len(predecessorUUIDS) == 0:
+    if focusNode['perpendicular'] == True and len(predecessorUUIDS) > 0:
+        #get the noram, rotate 90 degrees
+        predecessor = allNodes[predecessorUUIDS[0]]
+        normalized = utils.get_normal(predecessor['loc'],focusNode['loc'])
+        direction = choice([ [[0,-1],[1,0]], [[0,1], [-1, 0]] ])
+        perpendicular = normalized.dot(direction)
+        newPoint = focusNode['loc'] + (perpendicular * (2*focusNode['d']))
+    elif len(predecessorUUIDS) == 0:
         #no predecessor, pick a random direction
         logging.debug("No predecessor, picking random direction")
         #todo: rotate around the point
@@ -209,6 +216,20 @@ def grow():
     newNodes = [createNode(x,NODE_START_SIZE) for x in newPositions]
     for x in newNodes:
         graph.add_edge(focusNodeUUID,x['uuid'])
+    #occasionally backtrack from a branch point:
+    if random() < BRANCH_BACKTRACK_AMNT and len(branchPoints) > 0:
+        rndBranch = choice(branchPoints)
+        rndBranchNode = allNodes[rndBranch]
+        length_of_branch = rndBranchNode['distance_from_branch']
+        midPoint = int(length_of_branch * 0.5)
+        currentNodeUUID = rndBranch
+        for x in range(midPoint):
+            currentNodeUUID = graph.predecessors(currentNodeUUID)[0]
+
+        potentialNode = allNodes[currentNodeUUID]
+        if potentialNode['remaining'] > 0 and len(frontier) < MAX_FRONTIER_NODES :
+            potentialNode['perpendicular'] = True
+            frontier.append(currentNodeUUID)
             
     
     return False
