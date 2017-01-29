@@ -108,17 +108,18 @@ def initialise():
     root = createNode(START,NODE_START_SIZE)
 
 
-def getNeighbourhood(x,y):
+def getNeighbourhood(x,y,d):
     """
     for a given new node, get nodes local to it spatially
     + the predecessor chain
     """
-    delta = NODE_START_SIZE * 0.5
+    delta = d*NEIGHBOUR_DELTA
     bbox = [x-delta,y-delta,
             x+delta,y+delta]
     logging.debug("Neighbourhood of ({},{}) -> bbox {}".format(x,y, bbox))
     matches = qtree.intersect(bbox)
-    return matches
+    matchNodes = [allNodes[x] for x in matches]
+    return matchNodes
 
     
 
