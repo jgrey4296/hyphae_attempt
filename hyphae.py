@@ -243,10 +243,19 @@ if __name__ == "__main__":
     i = 0
     growSaysFinish = False
     while not allFrontiersAreAtBoundary() and not growSaysFinish:
-        growSaysFinish = grow()
         i += 1
+        growSaysFinish = grow()
+        logging.info(i)
+        if not ANIMATE:
+            continue
+
         if i % DRAW_STEP == 0:
-            draw_hyphae()
+            if DRAW_NODES:
+                draw_hyphae()
+            else:
+                draw_hyphae_2()
             utils.write_to_png(surface,join(OUTPUT_DIR,OUTPUT_FILE),i)
+        if i % 50 == 0:
+            logging.info("...")
     draw_hyphae()
     utils.write_to_png(surface,join(OUTPUT_DIR,OUTPUT_FILE),"FINAL")
