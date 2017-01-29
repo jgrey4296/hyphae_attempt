@@ -226,7 +226,7 @@ def draw_hyphae():
         #draw the node / line
         ctx.set_source_rgba(*[1,i,1,1])
         logging.debug("Circle: {:.2f}, {:.2f}".format(*currentNode['loc']))
-        utils.drawCircle(ctx,*currentNode['loc'],currentNode['d']-0.004)
+        utils.drawCircle(ctx,*currentNode['loc'],currentNode['d']-SIZE_DIFF)
         #get it's children
         nodes.extend(graph.successors(currentUUID))
         if i == 0:
