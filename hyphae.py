@@ -35,7 +35,7 @@ Y = pow(2,N)
 
 #Start points points
 CENTRE = np.array([0.5,0.5])
-START_NODES = np.array([[0.5,0.5]])
+START_NODES = np.array([[0.4,0.4],[0.6,0.6]])
 #Where to output the renderings:
 OUTPUT_DIR = "output"
 OUTPUT_FILE = "hyphae"
