@@ -81,8 +81,8 @@ qtree = pyqtree.Index(bbox=bounds)
 #qtree.insert(item=item, bbox=item.bbox)
 #matches = qtree.intersect(bbox)
 frontier = deque()
-#Root node:
-root = None
+#Root nodes:
+root_nodes = []
 
 #CAIRO: --------------------
 logging.info("Setting up Cairo")
@@ -113,8 +113,9 @@ def bboxFromNode(node):
 
 def initialise():
     logging.info("Setting up root node")
-    global root
-    root = createNode(START,NODE_START_SIZE)
+    global root_nodes
+    for loc in START_NODES:
+        root_nodes.append(createNode(loc,NODE_START_SIZE))
 
 
 def getNeighbourhood(x,y,d):
@@ -151,7 +152,7 @@ def allFrontiersAreAtBoundary():
     logging.debug("Checking {} frontiers are at boundary".format(len(frontier)))
     #distance check all nodes in the frontier
     nodesFromUUIDS = [allNodes[x] for x in frontier]
-    distances = [utils.get_distance(x['loc'],START) for x in nodesFromUUIDS]
+    distances = [utils.get_distance(x['loc'],CENTRE) for x in nodesFromUUIDS]
     paired = zip(frontier,distances)
     logging.debug("Distances: {}".format(distances))
     #filter the frontier:
@@ -257,7 +258,7 @@ def draw_hyphae():
     #clear the context
     utils.clear_canvas(ctx)
     #from the root node of the graph
-    nodes = deque([root['uuid']])
+    nodes = deque([x['uuid'] for x in root_nodes])
     #BFS the tree
     i = 1
     while len(nodes) > 0:
@@ -280,7 +281,7 @@ def draw_hyphae():
 def draw_hyphae_2():
     logging.debug("Drawing alternate")
     utils.clear_canvas(ctx)
-    nodes = deque(graph.successors(root['uuid']))
+    nodes = deque([graph.successors(x['uuid']) for x in root_nodes])
     #BFS the tree:
     ctx.set_source_rgba(*MAIN_COLOUR)
     while len(nodes) > 0:
