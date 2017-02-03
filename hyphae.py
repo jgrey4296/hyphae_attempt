@@ -27,16 +27,35 @@ from numpy.random import random
 import IPython
 
 #CONSTANTS:
+
+#Size of generated image:
 N = 10
 X = pow(2,N)
 Y = pow(2,N)
-START = np.array([0.5,0.5])
-START_SQ = START ** 2
+
+#Start points points
+CENTRE = np.array([0.5,0.5])
+START_NODES = np.array([[0.5,0.5]])
+#Where to output the renderings:
 OUTPUT_DIR = "output"
 OUTPUT_FILE = "hyphae"
-bounds = [0,0,1,1]
+#Render options:
+DRAW_NODES = True
+ANIMATE = False
+SIZE_DIFF = 0.003
+LINE_PROPORTION_DISTORTION = 0.8
+LINE_DISTORTION_UPSCALING = 100
+NODE_OPACITY = 0.3
+NODE_COLOUR = [1,1,1,NODE_OPACITY]
+node_colour = lambda : np.concatenate((random(3),[NODE_OPACITY]))
+MAIN_COLOUR = node_colour()
 DRAW_STEP = 100
+#Bounds of the quadtree:
+bounds = [0,0,1,1]
+#Neighbourhood distance size:
 HYPHAE_CIRC = 0.4
+NEIGHBOUR_DELTA = 1.5
+#Growth rules:
 WIGGLE_CHANCE = 0.4
 WIGGLE_AMNT = 0.4
 WIGGLE_VARIANCE = 0.4
@@ -46,23 +65,12 @@ SPLIT_ANGLE_VARIANCE = 0.5
 NODE_START_SIZE = 0.005
 NODE_SIZE_DECAY = 0.00002
 MIN_NODE_SIZE = 0.0009
-SIZE_DIFF = 0.003
 MAX_ATTEMPTS_PER_NODE = 4
-LINE_PROPORTION_DISTORTION = 0.8
-LINE_DISTORTION_UPSCALING = 100
 BRANCH_BACKTRACK_AMNT = 0.3
 MAX_FRONTIER_NODES = 100
-NODE_OPACITY = 0.3
-NODE_COLOUR = [1,1,1,NODE_OPACITY]
-NEIGHBOUR_DELTA = 1.5
-DRAW_NODES = False
-ANIMATE = False
-
-node_colour = lambda : np.concatenate((random(3),[NODE_OPACITY]))
-
-MAIN_COLOUR = node_colour()
 MAX_GROWTH_STEPS = 10000
 #####################
+#Variables:
 logging.info("Setting up Graph and QuadTree")
 allNodes = {}
 branchPoints = []
