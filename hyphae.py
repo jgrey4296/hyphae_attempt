@@ -83,6 +83,8 @@ qtree = pyqtree.Index(bbox=bounds)
 frontier = deque()
 #Root nodes:
 root_nodes = []
+#Colours :
+colours = [node_colour() for x in START_NODES]
 
 #CAIRO: --------------------
 logging.info("Setting up Cairo")
@@ -91,11 +93,14 @@ ctx = cairo.Context(surface)
 ctx.scale(X,Y) #coords in 0-1 range
 
 #Utility functions:
-def createNode(location,d,distance=0):
+def createNode(location,d,distance=0,colour=0):
     logging.debug("Creating a node for location: {}".format(location))
     global allNodes, graph, frontier, qtree
+    if colour > len(colours):
+        raise Exception("Tried to create a node with a non-existent colour")
+    
     newNode = {'loc':location, 'd':d,'uuid': uuid1(), 'remaining':MAX_ATTEMPTS_PER_NODE,
-               'distance_from_branch': distance, 'perpendicular' : False}
+               'distance_from_branch': distance, 'perpendicular' : False, 'colour' : colour}
     allNodes[newNode['uuid']] = newNode
     graph.add_node(newNode['uuid'])
     frontier.append(newNode['uuid'])
@@ -114,8 +119,8 @@ def bboxFromNode(node):
 def initialise():
     logging.info("Setting up root node")
     global root_nodes
-    for loc in START_NODES:
-        root_nodes.append(createNode(loc,NODE_START_SIZE))
+    for i,loc in enumerate(START_NODES):
+        root_nodes.append(createNode(loc,NODE_START_SIZE,colour=i))
 
 
 def getNeighbourhood(x,y,d):
@@ -228,7 +233,7 @@ def grow():
     
     #add new node/nodes to frontier,
     #create the nodes
-    newNodes = [createNode(x,focusNode['d']-decay,distance_from_branch) for x in newPositions]
+    newNodes = [createNode(x,focusNode['d']-decay,distance_from_branch,focusNode['colour']) for x in newPositions]
     for x in newNodes:
         graph.add_edge(focusNodeUUID,x['uuid'])
 
@@ -266,7 +271,7 @@ def draw_hyphae():
         currentNode = allNodes[currentUUID]
         #todo: get a line between currentNode and predecessor
         #draw the node / line
-        ctx.set_source_rgba(*[1,i,1,1])
+        ctx.set_source_rgba(*colours[currentNode['colour']])
         logging.debug("Circle: {:.2f}, {:.2f}".format(*currentNode['loc']))
         utils.drawCircle(ctx,*currentNode['loc'],currentNode['d']-SIZE_DIFF)
         #get it's children
