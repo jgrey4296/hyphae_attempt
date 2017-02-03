@@ -16,7 +16,7 @@ from os.path import join
 import numpy as np
 import pandas
 import networkx as nx
-import cairocffi as cairo
+import cairo
 import utils
 from collections import namedtuple, deque
 import pyqtree
