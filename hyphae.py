@@ -61,7 +61,8 @@ ANIMATE = False
 node_colour = lambda : np.concatenate((random(3),[NODE_OPACITY]))
 
 MAIN_COLOUR = node_colour()
-
+MAX_GROWTH_STEPS = 10000
+#####################
 logging.info("Setting up Graph and QuadTree")
 allNodes = {}
 branchPoints = []
@@ -294,7 +295,7 @@ if __name__ == "__main__":
     initialise()
     i = 0
     growSaysFinish = False
-    while not allFrontiersAreAtBoundary() and not growSaysFinish:
+    while not allFrontiersAreAtBoundary() and not growSaysFinish and i < MAX_GROWTH_STEPS:
         i += 1
         growSaysFinish = grow()
         logging.info(i)
