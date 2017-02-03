@@ -42,7 +42,7 @@ for filename in files:
     logging.info("Loading: {}".format(filename))
     images.append(imageio.imread(join(OUTPUT_DIR,filename)))
 
-imageio.mimsave(join(GIF_OUTPUT,GIF_NAME),images,'GIF-FI')
+imageio.mimsave(join(GIF_OUTPUT,GIF_NAME),images,'GIF')
 
 #Alternative:
 # with imageio.get_writer(join(GIF_OUTPUT,GIF_NAME), mode='I') as writer:
