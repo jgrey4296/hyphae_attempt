@@ -215,30 +215,29 @@ def grow(node=None):
                                          radMin=-(WIGGLE_AMNT + WIGGLE_VARIANCE),
                                          radMax=(WIGGLE_AMNT + WIGGLE_VARIANCE))
 
-    #Split branch based on split chance
+def split_if_necessary(point, focusNode):
+    """ Split branch based on split chance """
     if not focusNode['perpendicular'] and random() < SPLIT_CHANCE:
-        s1 = utils.rotatePoint(focusNode['loc'], newPoint,
+        s1 = utils.rotatePoint(focusNode['loc'], point,
                                radMin=-(SPLIT_ANGLE+SPLIT_ANGLE_VARIANCE),
                                radMax=-(SPLIT_ANGLE-SPLIT_ANGLE_VARIANCE))
-        s2 = utils.rotatePoint(focusNode['loc'], newPoint,
+        s2 = utils.rotatePoint(focusNode['loc'], point,
                                radMin=SPLIT_ANGLE-SPLIT_ANGLE_VARIANCE,
                                radMax=SPLIT_ANGLE+SPLIT_ANGLE_VARIANCE)
         newPositions = [s1, s2]
         decay = NODE_SIZE_DECAY
         distance_from_branch = 0
     elif focusNode['perpendicular']:
-        newPositions = [newPoint]
+        newPositions = [point]
         decay = 0.0
         distance_from_branch = 0
     else:
-        newPositions = [newPoint]
+        newPositions = [point]
         decay = 0.0
         distance_from_branch = focusNode['distance_from_branch'] + 1
 
-    #check for intersections and being too close
-    neighbours = [x for newPos in newPositions for x in getNeighbourhood(*newPos,focusNode['d']) if x['uuid'] not in predecessorUUIDS and x['uuid'] != focusNodeUUID]
-    #distances = [(utils.get_distance_raw(x['loc'],newPoint),x['d']) for x in neighbours]
-    #too_close = [x for x,y in distances if x < ((y+y)**2)]
+    return (newPositions,decay,distance_from_branch)
+
 
 def positions_collide(positions, focusNode):
     """ 
