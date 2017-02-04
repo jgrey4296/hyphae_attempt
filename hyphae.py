@@ -323,6 +323,10 @@ if __name__ == "__main__":
         if i % DRAW_STEP == 0:
             if DRAW_NODES:
                 draw_hyphae()
+            elif DRAW_LINES:
+                draw_hyphae_3()
+            elif DRAW_PATHS:
+                draw_hyphae_4()
             else:
                 draw_hyphae_2()
             utils.write_to_png(surface,join(OUTPUT_DIR,OUTPUT_FILE),i)
