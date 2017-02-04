@@ -206,12 +206,12 @@ def grow():
                                          radMax=(WIGGLE_AMNT + WIGGLE_VARIANCE))
 
     #Split branch based on split chance
-    if random() < SPLIT_CHANCE:
+    if not focusNode['perpendicular'] and random() < SPLIT_CHANCE:
         s1 = utils.rotatePoint(focusNode['loc'], newPoint,
                                radMin=-(SPLIT_ANGLE+SPLIT_ANGLE_VARIANCE),
-                               radMax=-(SPLIT_ANGLE+SPLIT_ANGLE_VARIANCE))
+                               radMax=-(SPLIT_ANGLE-SPLIT_ANGLE_VARIANCE))
         s2 = utils.rotatePoint(focusNode['loc'], newPoint,
-                               radMin=SPLIT_ANGLE+SPLIT_ANGLE_VARIANCE,
+                               radMin=SPLIT_ANGLE-SPLIT_ANGLE_VARIANCE,
                                radMax=SPLIT_ANGLE+SPLIT_ANGLE_VARIANCE)
         newPositions = [s1, s2]
         decay = NODE_SIZE_DECAY
