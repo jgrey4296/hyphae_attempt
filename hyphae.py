@@ -280,10 +280,6 @@ def draw_hyphae():
         utils.drawCircle(ctx,*currentNode['loc'],currentNode['d']-SIZE_DIFF)
         #get it's children
         nodes.extend(graph.successors(currentUUID))
-        if i == 0:
-            i = 1
-        else:
-            i = 0
             
     return True
 
