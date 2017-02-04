@@ -275,7 +275,26 @@ def grow(node=None):
         if potentialNode['remaining'] > 0 and len(frontier) < MAX_FRONTIER_NODES :
             potentialNode['perpendicular'] = True
             frontier.append(currentNodeUUID)
-            
+
+    
+#Main Growth function:
+def grow(node=None):
+    global graph
+    logging.debug("Growing")
+    #pick a frontier node
+    if node is not None:
+        focusNodeUUID = node
+    else:
+        focusNodeUUID = frontier.popleft()
+    focusNode = allNodes[focusNodeUUID]
+    newPoint = determine_new_point(focusNode)
+    newPositions, decay, distance_from_branch = split_if_necessary(newPoint, focusNode)
+
+    if positions_collide(newPositions,focusNode):
+        return False
+
+    grow_suitable_nodes(newPositions,decay,distance_from_branch,focusNode)
+    backtrack_from_branch()
     
     return False
 
