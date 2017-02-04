@@ -169,13 +169,22 @@ def allFrontiersAreAtBoundary():
     return len(frontier) == 0
 
 
+def grow_frontier():
+    global frontier
+    current_frontier = frontier
+    frontier = deque()
+    for node in current_frontier:
+        grow(node)
 
 #Main Growth function:
-def grow():
+def grow(node=None):
     global graph
     logging.debug("Growing")
     #pick a frontier node
-    focusNodeUUID = frontier.popleft()
+    if node is not None:
+        focusNodeUUID = node
+    else:
+        focusNodeUUID = frontier.popleft()
     focusNode = allNodes[focusNodeUUID]
     #get its predecessor
     predecessorUUIDS = getPredecessorUUIDS(focusNodeUUID)
@@ -397,7 +406,7 @@ if __name__ == "__main__":
     growSaysFinish = False
     while not allFrontiersAreAtBoundary() and not growSaysFinish and i < MAX_GROWTH_STEPS:
         i += 1
-        growSaysFinish = grow()
+        growSaysFinish = grow_frontier()
         logging.info(i)
         if not ANIMATE:
             continue
