@@ -237,7 +237,12 @@ def grow():
     
     #add new node/nodes to frontier,
     #create the nodes
-    newNodes = [createNode(x,focusNode['d']-decay,distance_from_branch,focusNode['colour']) for x in newPositions]
+    if focusNode['perpendicular']:
+        colours.append(node_colour())
+        colour_index = len(colours) - 1
+    else:
+        colour_index = focusNode['colour']
+    newNodes = [createNode(x,focusNode['d']-decay,distance_from_branch,colour_index) for x in newPositions]
     for x in newNodes:
         graph.add_edge(focusNodeUUID,x['uuid'])
 
