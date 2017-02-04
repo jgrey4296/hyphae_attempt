@@ -261,7 +261,8 @@ def grow(node=None):
     if len(newNodes) > 1:
         branchPoints.append(focusNode['uuid'])
 
-    #occasionally backtrack from a branch point:
+def backtrack_from_branch():
+    """ occasionally backtrack from a branch point: """
     if random() < BRANCH_BACKTRACK_AMNT and len(branchPoints) > 0:
         rndBranch = choice(branchPoints)
         rndBranchNode = allNodes[rndBranch]
