@@ -269,7 +269,6 @@ def draw_hyphae():
     #from the root node of the graph
     nodes = deque([x['uuid'] for x in root_nodes])
     #BFS the tree
-    i = 1
     while len(nodes) > 0:
         currentUUID = nodes.popleft()
         currentNode = allNodes[currentUUID]
