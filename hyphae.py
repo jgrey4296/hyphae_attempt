@@ -216,8 +216,10 @@ def grow():
         newPositions = [s1, s2]
         decay = NODE_SIZE_DECAY
         distance_from_branch = 0
-        
-        
+    elif focusNode['perpendicular']:
+        newPositions = [newPoint]
+        decay = 0.0
+        distance_from_branch = 0
     else:
         newPositions = [newPoint]
         decay = 0.0
