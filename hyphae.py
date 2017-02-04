@@ -71,6 +71,7 @@ NODE_SIZE_DECAY = 0 #0.00002
 MIN_NODE_SIZE = 0.0008
 MAX_ATTEMPTS_PER_NODE = 4
 BRANCH_BACKTRACK_AMNT = 0.8
+BACKTRACK_STEP_NUM = lambda x: int(1 + (x-1 * random()))
 MAX_FRONTIER_NODES = 100
 MAX_GROWTH_STEPS = 10000
 #####################
@@ -265,9 +266,9 @@ def grow(node=None):
         rndBranch = choice(branchPoints)
         rndBranchNode = allNodes[rndBranch]
         length_of_branch = rndBranchNode['distance_from_branch']
-        midPoint = int(length_of_branch * 0.5)
+        branchPoint = BACKTRACK_STEP_NUM(length_of_branch)
         currentNodeUUID = rndBranch
-        for x in range(midPoint):
+        for x in range(branchPoint):
             currentNodeUUID = graph.predecessors(currentNodeUUID)[0]
 
         potentialNode = allNodes[currentNodeUUID]
