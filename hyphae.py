@@ -24,9 +24,9 @@ import utils
 import pyqtree
 from uuid import uuid1
 import IPython
-
+##############################
 #CONSTANTS:
-
+####################
 #Size of generated image:
 N = 10
 X = pow(2, N)
@@ -73,8 +73,9 @@ BRANCH_BACKTRACK_AMNT = 0.8
 BACKTRACK_STEP_NUM = lambda x: int(1 + (x-1 * random()))
 MAX_FRONTIER_NODES = 100
 MAX_GROWTH_STEPS = 10000
-#####################
+###############################
 #Variables:
+####################
 logging.info("Setting up Graph and QuadTree")
 allNodes = {}
 branchPoints = []
@@ -89,14 +90,16 @@ frontier = deque()
 root_nodes = []
 #Colours :
 colours = [NODE_COLOUR() for x in START_NODES]
-
-#CAIRO: --------------------
+##############################
+#CAIRO:
+####################
 logging.info("Setting up Cairo")
 surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, X, Y)
 ctx = cairo.Context(surface)
 ctx.scale(X, Y) #coords in 0-1 range
-
+##############################
 #Utility functions:
+####################
 def create_node(location, d, distance=0, colour=0):
     """
     Create a node, add it to the graph, frontier, and quadtree
@@ -123,13 +126,6 @@ def bbox_from_node(node):
     ]
     return bbox
 
-def initialise():
-    """ Setup the starting state of the growth """
-    logging.info("Setting up root node")
-    for i, loc in enumerate(START_NODES):
-        root_nodes.append(create_node(loc, NODE_START_SIZE, colour=i))
-
-
 def get_neighbourhood(x, y, d):
     """
     for a given new node, get nodes local to it spatially
@@ -142,19 +138,6 @@ def get_neighbourhood(x, y, d):
     matches = qtree.intersect(bbox)
     match_nodes = [allNodes[x] for x in matches]
     return match_nodes
-
-def get_predecessor_uuids(nodeUUID):
-    """
-    Get the tree predecessor of a node
-    """
-    return graph.predecessors(nodeUUID)
-
-def check_node_pair_intersection(node1a, node1b, node2a, node2b):
-    """
-    See if two pairs of nodes cross each other
-    """
-    return False
-
 
 def all_frontiers_are_at_boundary():
     """ verify the distances of the frontier to the centre """
@@ -169,23 +152,11 @@ def all_frontiers_are_at_boundary():
     frontier = deque([x for x, y in paired if y < HYPHAE_CIRC])
     return len(frontier) == 0
 
-
-def grow_frontier():
-    """ Grow every node in the frontier in a single step  """
-    global frontier
-    current_frontier = frontier
-    frontier = deque()
-    for node in current_frontier:
-        grow(node)
-
-    return False
-        
-
 def determine_new_point(node):
     """
     Given a node, figure out the node that follows location
     """
-    predecessorUUIDs = get_predecessor_uuids(node['uuid'])
+    predecessorUUIDs = graph.predecessors(node['uuid'])
     if node['perpendicular'] is True and len(predecessorUUIDs) > 0:
         #get the noram, rotate 90 degrees
         predecessor = allNodes[predecessorUUIDs[0]]
@@ -241,7 +212,7 @@ def positions_collide(positions, focusNode):
     """ 
     See if the positions specified are too close to any existing nodes
     """
-    predecessorUUIDs = get_predecessor_uuids(focusNode['uuid'])
+    predecessorUUIDs = graph.predecessors(focusNode['uuid'])
     neighbours = [x for newPos in positions for x in get_neighbourhood(*newPos, focusNode['d']) \
                   if x['uuid'] not in predecessorUUIDs and x['uuid'] != focusNode['uuid']]
     if len(neighbours) != 0:
@@ -291,28 +262,30 @@ def backtrack_from_branch():
             potentialNode['perpendicular'] = True
             frontier.append(currentNodeUUID)
 
-   
-#Main Growth function:
-def grow(node=None):
-    """ Grow a single node out """    
-    logging.debug("Growing")
-    #pick a frontier node
-    if node is not None:
-        focusNodeUUID = node
-    else:
-        focusNodeUUID = frontier.popleft()
-    focusNode = allNodes[focusNodeUUID]
-    newPoint = determine_new_point(focusNode)
-    newPositions, decay, distance_from_branch = split_if_necessary(newPoint, focusNode)
 
-    if positions_collide(newPositions, focusNode):
-        return False
+def get_branch_point(nodeUUID):
+    """ skip down the successor chain until finding a branch """
+    currentUUID = nodeUUID
+    successors = graph.successors(currentUUID)
+    while len(successors) == 1:
+        currentUUID = successors[0]
+        successors = graph.successors(currentUUID)
+    return currentUUID
 
-    grow_suitable_nodes(newPositions, decay, distance_from_branch, focusNode)
-    backtrack_from_branch()
-    
-    return False
+def get_path(nodeUUID):
+    """ get all nodes from the current to the next branch """
+    path = []
+    successors = graph.successors(nodeUUID)
+    while len(successors) == 1:
+        path.append(successors[0])
+        successors = graph.successors(path[-1])
+    return path
 
+
+            
+##############################
+# DRAWING
+####################
 def draw_hyphae():
     """ Simple draw routine, each node as a circle """
     logging.debug("Drawing")
@@ -358,25 +331,6 @@ def draw_hyphae_2():
         #    utils.clamp(currentNode['d']-SIZE_DIFF, MIN_NODE_SIZE, NODE_START_SIZE))
 
     return True
-
-def get_branch_point(nodeUUID):
-    """ skip down the successor chain until finding a branch """
-    currentUUID = nodeUUID
-    successors = graph.successors(currentUUID)
-    while len(successors) == 1:
-        currentUUID = successors[0]
-        successors = graph.successors(currentUUID)
-    return currentUUID
-
-def get_path(nodeUUID):
-    """ get all nodes from the current to the next branch """
-    path = []
-    successors = graph.successors(nodeUUID)
-    while len(successors) == 1:
-        path.append(successors[0])
-        successors = graph.successors(path[-1])
-    return path
-
     
 def draw_hyphae_3():
     """ An alternate draw routine, drawing lines for branches """    
@@ -438,8 +392,47 @@ def draw_hyphae_4():
             ctx.line_to(*succNode['loc'])
             ctx.stroke()
 
+##############################
+#GROWING
+####################
+def grow(node=None):
+    """ Grow a single node out """    
+    logging.debug("Growing")
+    #pick a frontier node
+    if node is not None:
+        focusNodeUUID = node
+    else:
+        focusNodeUUID = frontier.popleft()
+    focusNode = allNodes[focusNodeUUID]
+    newPoint = determine_new_point(focusNode)
+    newPositions, decay, distance_from_branch = split_if_necessary(newPoint, focusNode)
+
+    if positions_collide(newPositions, focusNode):
+        return False
+
+    grow_suitable_nodes(newPositions, decay, distance_from_branch, focusNode)
+    backtrack_from_branch()
+    
+    return False
+            
+def grow_frontier():
+    """ Grow every node in the frontier in a single step  """
+    global frontier
+    current_frontier = frontier
+    frontier = deque()
+    for node in current_frontier:
+        grow(node)
+
+    return False
+            
+def initialise():
+    """ Setup the starting state of the growth """
+    logging.info("Setting up root node")
+    for i, loc in enumerate(START_NODES):
+        root_nodes.append(create_node(loc, NODE_START_SIZE, colour=i))
 
 
+########################################
 if __name__ == "__main__":
     logging.info('Starting main')
     initialise()
