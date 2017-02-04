@@ -249,15 +249,23 @@ def grow(node=None):
     
     #add new node/nodes to frontier,
     #create the nodes
+
+def grow_suitable_nodes(newPositions,decay,distance_from_branch,focusNode):
+    """
+    Create new nodes, storing any branch points, and linking the edge to its parent
+    """
+    #retrieve or create a colour:
     if focusNode['perpendicular']:
         colours.append(node_colour())
         colour_index = len(colours) - 1
     else:
         colour_index = focusNode['colour']
+    #create the nodes:
     newNodes = [createNode(x,focusNode['d']-decay,distance_from_branch,colour_index) for x in newPositions]
+    #add the nodes to the graph:
     for x in newNodes:
-        graph.add_edge(focusNodeUUID,x['uuid'])
-
+        graph.add_edge(focusNode['uuid'],x['uuid'])
+    #add branch points to the store:
     if len(newNodes) > 1:
         branchPoints.append(focusNode['uuid'])
 
