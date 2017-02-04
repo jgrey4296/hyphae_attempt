@@ -308,6 +308,86 @@ def draw_hyphae_2():
 
     return True
 
+def get_branch_point(nodeUUID):
+    currentUUID = nodeUUID
+    successors = graph.successors(currentUUID)
+    while len(successors) == 1:
+        currentUUID = successors[0]
+        successors = graph.successors(currentUUID)
+    return currentUUID
+
+def get_path(nodeUUID):
+    path = []
+    successors = graph.successors(nodeUUID)
+    while len(successors) == 1:
+        path.append(successors[0])
+        successors = graph.successors(path[-1])
+    return path
+
+    
+def draw_hyphae_3():
+    utils.clear_canvas(ctx)
+    nodes = deque([x['uuid'] for x in root_nodes])
+    i = 1
+    while len(nodes) > 0:
+        currentUUID = nodes.popleft()
+        currentNode = allNodes[currentUUID]
+        branchUUID = get_branch_point(currentUUID)
+        branchNode = allNodes[branchUUID]
+        
+        ctx.set_source_rgba(*colours[currentNode['colour']])
+        ctx.set_line_width(LINE_WIDTH)
+        utils.drawCircle(ctx,*currentNode['loc'],currentNode['d']-SIZE_DIFF)
+        ctx.move_to(*currentNode['loc'])
+        ctx.line_to(*branchNode['loc'])
+        ctx.stroke()
+        nodes.extend(graph.successors(branchNode['uuid']))
+        for succUUID in graph.successors(branchNode['uuid']):
+            succNode = allNodes[succUUID]
+            ctx.move_to(*branchNode['loc'])
+            ctx.line_to(*succNode['loc'])
+            ctx.stroke()
+
+def draw_hyphae_4():
+    utils.clear_canvas(ctx)
+    nodes = deque([x['uuid'] for x in root_nodes])
+    i = 1
+    while len(nodes) > 0:
+        currentUUID = nodes.popleft()
+        currentNode = allNodes[currentUUID]
+        pathUUIDs = get_path(currentUUID)
+
+        ctx.set_source_rgba(*colours[currentNode['colour']])
+        ctx.set_line_width(LINE_WIDTH)
+        utils.drawCircle(ctx,*currentNode['loc'],currentNode['d']-SIZE_DIFF)
+
+
+        if len(pathUUIDs) == 0:
+            nodes.extend(graph.successors(currentUUID))
+            for succUUID in graph.successors(currentUUID):
+                lastNode = allNodes[currentUUID]
+                succNode = allNodes[succUUID]
+                ctx.move_to(*lastNode['loc'])
+                ctx.line_to(*succNode['loc'])
+                ctx.stroke()
+            continue
+        
+        ctx.move_to(*currentNode['loc'])
+        for nextUUID in pathUUIDs:
+            nextNode = allNodes[nextUUID]
+            ctx.line_to(*nextNode['loc'])
+        ctx.stroke()
+        nodes.extend(graph.successors(pathUUIDs[-1]))            
+
+        for succUUID in graph.successors(pathUUIDs[-1]):
+            lastNode = allNodes[pathUUIDs[-1]]
+            succNode = allNodes[succUUID]
+            ctx.move_to(*lastNode['loc'])
+            ctx.line_to(*succNode['loc'])
+            ctx.stroke()
+
+
+
 if __name__ == "__main__":
     logging.info('Starting main')
     initialise()
