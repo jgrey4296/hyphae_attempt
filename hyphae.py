@@ -239,16 +239,23 @@ def grow(node=None):
     neighbours = [x for newPos in newPositions for x in getNeighbourhood(*newPos,focusNode['d']) if x['uuid'] not in predecessorUUIDS and x['uuid'] != focusNodeUUID]
     #distances = [(utils.get_distance_raw(x['loc'],newPoint),x['d']) for x in neighbours]
     #too_close = [x for x,y in distances if x < ((y+y)**2)]
+
+def positions_collide(positions, focusNode):
+    """ 
+    See if the positions specified are too close to any existing nodes
+    """
+    predecessorUUIDs = getPredecessorUUIDS(focusNode['uuid'])
+    neighbours = [x for newPos in positions for x in getNeighbourhood(*newPos,focusNode['d']) if x['uuid'] not in predecessorUUIDs and x['uuid'] != focusNode['uuid']]
     if len(neighbours) != 0:
         logging.debug("There are {} intersections, not adding a new node".format(len(neighbours)))
         focusNode['remaining'] = focusNode['remaining']-1
         allNodes[focusNode['uuid']] = focusNode
         if focusNode['remaining'] > 0 and len(frontier) < MAX_FRONTIER_NODES:
             frontier.append(focusNode['uuid'])
-        return False
+        return True
+    else:
+        return False    
     
-    #add new node/nodes to frontier,
-    #create the nodes
 
 def grow_suitable_nodes(newPositions,decay,distance_from_branch,focusNode):
     """
