@@ -177,43 +177,38 @@ def grow_frontier():
     for node in current_frontier:
         grow(node)
 
-#Main Growth function:
-def grow(node=None):
-    global graph
-    logging.debug("Growing")
-    #pick a frontier node
-    if node is not None:
-        focusNodeUUID = node
-    else:
-        focusNodeUUID = frontier.popleft()
-    focusNode = allNodes[focusNodeUUID]
-    #get its predecessor
-    predecessorUUIDS = getPredecessorUUIDS(focusNodeUUID)
-    if focusNode['perpendicular'] == True and len(predecessorUUIDS) > 0:
+
+def determine_new_point(node):
+    """
+    Given a node, figure out the node that follows location
+    """
+    predecessorUUIDs = getPredecessorUUIDS(node['uuid'])
+    if node['perpendicular'] == True and len(predecessorUUIDs) > 0:
         #get the noram, rotate 90 degrees
-        predecessor = allNodes[predecessorUUIDS[0]]
-        normalized = utils.get_normal(predecessor['loc'],focusNode['loc'])
+        predecessor = allNodes[predecessorUUIDs[0]]
+        normalized = utils.get_normal(predecessor['loc'],node['loc'])
         direction = choice([ [[0,-1],[1,0]], [[0,1], [-1, 0]] ])
         perpendicular = normalized.dot(direction)
-        newPoint = focusNode['loc'] + (perpendicular * (2*focusNode['d']))
-    elif len(predecessorUUIDS) == 0:
+        newPoint = node['loc'] + (perpendicular * (2*node['d']))
+    elif len(predecessorUUIDs) == 0:
         #no predecessor, pick a random direction
         logging.debug("No predecessor, picking random direction")
         #todo: rotate around the point
-        rndVec = focusNode['loc'] + (np.random.random(2) - 0.5)
-        normalized = utils.get_normal(focusNode['loc'],rndVec)
-        newPoint = focusNode['loc'] + (normalized * (2 * focusNode['d']))
+        rndVec = node['loc'] + (np.random.random(2) - 0.5)
+        normalized = utils.get_normal(node['loc'],rndVec)
+        newPoint = node['loc'] + (normalized * (2 * node['d']))
     else:
         logging.debug("Extending vector")
         #create a vector out of the pair / Alt: move -> d(p,x) < d(n,x)
-        predecessor = allNodes[predecessorUUIDS[0]]
-        normalized = utils.get_normal(predecessor['loc'],focusNode['loc'])
-        newPoint = focusNode['loc'] + (normalized * (2*focusNode['d']))
-        #todo: add wiggle
+        predecessor = allNodes[predecessorUUIDs[0]]
+        normalized = utils.get_normal(predecessor['loc'],node['loc'])
+        newPoint = node['loc'] + (normalized * (2*node['d']))
         if random() < WIGGLE_CHANCE:
-            newPoint = utils.rotatePoint(focusNode['loc'],newPoint,
+            newPoint = utils.rotatePoint(node['loc'],newPoint,
                                          radMin=-(WIGGLE_AMNT + WIGGLE_VARIANCE),
-                                         radMax=(WIGGLE_AMNT + WIGGLE_VARIANCE))
+                                         radMax= (WIGGLE_AMNT + WIGGLE_VARIANCE))
+
+    return newPoint
 
 def split_if_necessary(point, focusNode):
     """ Split branch based on split chance """
