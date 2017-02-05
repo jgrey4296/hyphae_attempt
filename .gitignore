@@ -3,3 +3,5 @@ __pycache__
 *.png
 .DS_STORE
 *.gif
+output_pickle
+output
