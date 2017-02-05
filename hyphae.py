@@ -462,3 +462,4 @@ if __name__ == "__main__":
             logging.info("...")
     draw_hyphae()
     utils.write_to_png(surface, join(OUTPUT_DIR, OUTPUT_FILE), "FINAL")
+    utils.pickle_graph(allNodes,graph,PICKLE_FILENAME,PICKLE_DIR)
