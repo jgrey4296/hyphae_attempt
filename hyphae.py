@@ -39,6 +39,9 @@ START_NODES = np.array([[0.4, 0.4], [0.6, 0.6]])
 #Where to output the renderings:
 OUTPUT_DIR = "output"
 OUTPUT_FILE = "hyphae"
+#Pickle output details:
+PICKLE_DIR = "output_pickle"
+PICKLE_FILENAME = "hyphae_graph"
 #Render options:
 DRAW_NODES = False
 DRAW_LINES = True
