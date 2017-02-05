@@ -444,7 +444,7 @@ if __name__ == "__main__":
     while not all_frontiers_are_at_boundary() and not growSaysFinish and frame_index < MAX_GROWTH_STEPS:
         frame_index += 1
         growSaysFinish = grow_frontier()
-        logging.info(i)
+        logging.info(frame_index)
         if not ANIMATE:
             continue
 
