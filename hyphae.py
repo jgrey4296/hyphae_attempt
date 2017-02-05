@@ -435,7 +435,7 @@ def initialise():
         root_nodes.append(create_node(loc, NODE_START_SIZE, colour=i))
 
 
-########################################
+##############################
 if __name__ == "__main__":
     logging.info('Starting main')
     initialise()
