@@ -2,7 +2,7 @@
 all: backup clean static gif
 
 static:
-	python hyphae.py
+	python main.py
 	open ./output
 
 clean:
