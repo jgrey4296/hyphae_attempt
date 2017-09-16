@@ -1,19 +1,18 @@
+.PHONY: 
 
-all: backup clean static gif
+all: clean static
 
-static:
+static: .PHONY clean
 	python main.py
-	open ./output
+	open ./imgs
 
 clean:
-	-rm output/*.png
+	-rm imgs/*.png
 	-rm *.gif
 
-gif:
-	python make_gif.py
+gif: .PHONY clean backup
+	python main.py -gif
 	open ./
-
-sgif: clean static gif
 
 backup:
 	-gcp --backup=t anim.gif ~/Desktop/
