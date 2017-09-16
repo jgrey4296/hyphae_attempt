@@ -1,21 +1,19 @@
 """
 An re-implementation of inconvergent's hyphae
 """
-from collections import namedtuple, deque
+from collections import deque
 from numpy.random import random
-from os.path import join
 from random import choice
 from uuid import uuid1
-import IPython
-import cairo
 import cairo_utils as utils
+from cairo_utils import pickles
 import logging as root_logger
 import math
 import networkx as nx
 import numpy as np
 import pyqtree
-
-from .constants import *
+import IPython
+from . import constants
 from .Node import Node
 
 logging = root_logger.getLogger(__name__)
@@ -23,39 +21,53 @@ logging = root_logger.getLogger(__name__)
 class Hyphae:
     """ A reimplementation of Inconvergent's version of hyphae """
     
-    def __init__(self, debug=False, debug_dir="output"):
+    def __init__(self, debug=False, debug_dir="output", draw_class=None, N=5):
         self.allNodes = {}
         self.branchPoints = []
         #Keep track of nodes in a directed graph
         self.graph = nx.DiGraph()
         #check for neighbours with the qtree
-        self.qtree = pyqtree.Index(bbox=BOUNDS)
+        self.qtree = pyqtree.Index(bbox=constants.BOUNDS)
         #Qtree usage:
         #qtree.insert(item=item, bbox=item.bbox.flatten)
         #matches = qtree.intersect(bbox)
 
         self.frontier = deque()
         self.root_nodes = []
-        #Colours for each node
-        self.colours = [NODE_COLOUR() for x in START_NODES]
 
         self.debug_flag = debug
         self.debug_dir = debug_dir
         if self.debug_flag:
-            #setup the debug drawing subclass
-            1
-            
-            
+            assert(draw_class is not None)
+            self.draw_instance = draw_class(self, N=N)
+
+    def initialise(self, start_nodes=constants.START_NODES):
+        """ Setup the starting state of the growth """
+        logging.info("Setting up root nodes: {}".format(constants.START_NODES))
+        for i, loc in enumerate(start_nodes):
+            self.root_nodes.append(self.create_node(loc, constants.NODE_START_SIZE))
+
+    def load(self):
+        nodes, graph = pickles.load_pickled_graph("hyphae")
+        self.allNodes = nodes
+        self.graph = graph
+
+    def save(self):
+        pickles.pickle_graph(self.allNodes, self.graph, "hyphae")
+
         
-    def create_node(self, location, d, distance=0, colour=0):
+        
+    def create_node(self, location, d, distance=0, priorNode=None):
         """
         Create a node, add it to the graph, frontier, and quadtree
         """
         logging.debug("Creating a node for location: {}".format(location))
-        if colour > len(self.colours):
-            raise Exception("Tried to create a node with a non-existent colour")
 
-        newNode = Node(location, d, distance, colour=colour)
+        if priorNode is not None:
+            newNode = priorNode.mutate(location, d, distance,
+                                       mod_chances=constants.mod_chances)
+        else:
+            newNode = Node(location, d, distance)
         # newNode = {'loc':location, 'd':d, 'uuid': uuid1(), 'remaining':MAX_ATTEMPTS_PER_NODE,
         #            'distance_from_branch': distance, 'perpendicular' : False, 'colour' : colour}
         self.allNodes[newNode.id] = newNode
@@ -64,24 +76,19 @@ class Hyphae:
         self.qtree.insert(item=newNode.id, bbox=newNode.bbox.flatten())
         return newNode
 
-    def get_neighbourhood(self, x, y, d):
-        """
-        for a given new node, get nodes local to it spatially
-        + the predecessor chain
-        """
-        delta = d*NEIGHBOUR_DELTA
-        bbox = [x-delta, y-delta,
-                x+delta, y+delta]
-        logging.debug("Neighbourhood of ({},{}) -> bbox {}".format(x, y, bbox))
-        matches = self.qtree.intersect(bbox)
+    def get_node_neighbourhood(self, node, loc=None):
+        assert(isinstance(node, Node))
+        if loc is None:
+            loc = node.loc
+        bbox_raw = node.get_delta_bbox()
+        bbox = np.array([loc - bbox_raw,
+                         loc + bbox_raw])
+        logging.debug("Neighbourhood of ({},{}) -> bbox {}".format(loc[0], loc[1], bbox))
+        matches = self.qtree.intersect(bbox.flatten())
         assert(all([x in self.allNodes for x in matches]))
         match_nodes = [self.allNodes[x] for x in matches]
         assert(len(matches) == len(match_nodes))
         return match_nodes
-
-    def get_node_neighbourhood(self, node):
-        assert(isinstance(node, Node))
-        return self.get_neighbourhood(node.loc[0], node.loc[1], node.d)
 
     def filter_frontier_to_boundary(self):
         """ verify the distances of the frontier to the centre """
@@ -89,11 +96,11 @@ class Hyphae:
         #distance check all nodes in the frontier
         assert(all([x in self.allNodes for x in self.frontier]))
         nodesFromIDs = [self.allNodes[x] for x in self.frontier]
-        distances = [x.distance_to(CENTRE) for x in nodesFromIDs]
+        distances = [x.distance_to(constants.CENTRE) for x in nodesFromIDs]
         paired = zip(self.frontier, distances)
         logging.debug("Distances: {}".format(distances))
         #filter the frontier:
-        self.frontier = deque([x for x, y in paired if y < HYPHAE_CIRC])
+        self.frontier = deque([x for x, y in paired if y < constants.HYPHAE_CIRC])
         return len(self.frontier) == 0
 
     def determine_new_point(self, node):
@@ -122,31 +129,39 @@ class Hyphae:
             predecessor = self.allNodes[predecessorIDs[0]]
             normalized = predecessor.get_normal(node)
             newPoint = node.move(normalized)
-            if random() < WIGGLE_CHANCE:
+            if random() < node.wiggle_chance:
                 newPoint = utils.rotatePoint(newPoint, node.loc, 
-                                             radMin=-(WIGGLE_AMNT + WIGGLE_VARIANCE), 
-                                             radMax=(WIGGLE_AMNT + WIGGLE_VARIANCE))
+                                             radMin=-(node.wiggle_amnt + node.wiggle_variance), 
+                                             radMax=(node.wiggle_amnt + node.wiggle_variance))
 
         return newPoint
 
     def split_if_necessary(self, point, focusNode):
         """ Split branch based on split chance """
         assert(isinstance(focusNode, Node))
-        if not focusNode.perpendicular and random() < SPLIT_CHANCE:
+        if not focusNode.perpendicular and random() < focusNode.split_chance:
+            #branch
             s1 = utils.rotatePoint(point, focusNode.loc,
-                                   radMin=-(SPLIT_ANGLE+SPLIT_ANGLE_VARIANCE), 
-                                   radMax=-(SPLIT_ANGLE-SPLIT_ANGLE_VARIANCE))
+                                   radMin=-(focusNode.split_angle + focusNode.split_variance), 
+                                   radMax=-(focusNode.split_angle - focusNode.split_variance))
             s2 = utils.rotatePoint(point, focusNode.loc,
-                                   radMin=SPLIT_ANGLE-SPLIT_ANGLE_VARIANCE, 
-                                   radMax=SPLIT_ANGLE+SPLIT_ANGLE_VARIANCE)
+                                   radMin=focusNode.split_angle - focusNode.split_variance, 
+                                   radMax=focusNode.split_angle + focusNode.split_variance)
+            #todo: figure out whats going on here
+            if len(s1.shape) == 2:
+                s1 = choice(s1)
+            if len(s2.shape) == 2:
+                s2 = choice(s2)
             newPositions = [s1, s2]
-            decay = NODE_SIZE_DECAY
+            decay = focusNode.size_decay
             distance_from_branch = 0
         elif focusNode.perpendicular:
+            #go perpendicular, with a new branch
             newPositions = [point]
             decay = 0.0
             distance_from_branch = 0
         else:
+            #extend the new branch
             newPositions = [point]
             decay = 0.0
             distance_from_branch = focusNode.distance_from_branch + 1
@@ -160,18 +175,26 @@ class Hyphae:
         """
         assert(isinstance(positions, list))
         assert(isinstance(focusNode, Node))
-        predecessorIDs = self.graph.predecessors(focusNode.id)
-        neighbours = [x for newPos in positions for x in self.get_neighbourhood(*newPos,
-                                                                                focusNode.d) \
-                      if x.id not in predecessorIDs and x.id != focusNode.id]
+        bbox_delta = focusNode.d + focusNode.delta
+        for pos in positions:
+            neighbours = [x for newPos in positions for x in self.get_node_neighbourhood(focusNode,
+                                                                                         loc=pos)
+                          if x.id is not focusNode.id]
+            fNodeDist = focusNode.distance_to(pos)
+            distances = [x.distance_to(pos) for x in neighbours]
+            too_close = [x for x in distances if x < fNodeDist or x < bbox_delta]
+            if bool(too_close):
+                logging.debug("There are {} collision,  not adding a new node".format(len(neighbours)))
+                focusNode.attempt()
+                if focusNode.open() and len(self.frontier) < constants.MAX_FRONTIER_NODES:
+                    self.frontier.append(focusNode.id)
+                return True
+
+            distances_to_other_new_pos = [utils.get_distance(pos,x) for x in positions if all(x != pos)]
+            if any([x < fNodeDist for x in distances_to_other_new_pos]):
+                return True
         
-        if len(neighbours) != 0:
-            logging.debug("There are {} intersections,  not adding a new node".format(len(neighbours)))
-            focusNode.attempt()
-            if focusNode.open() and len(self.frontier) < MAX_FRONTIER_NODES:
-                self.frontier.append(focusNode.id)
-            return True
-   
+            
         return False
   
 
@@ -179,15 +202,9 @@ class Hyphae:
         """
         Create new nodes,  storing any branch points,  and linking the edge to its parent
         """
-        #retrieve or create a colour:
-        if focusNode.perpendicular:
-            self.colours.append(NODE_COLOUR())
-            colour_index = len(self.colours) - 1
-        else:
-            colour_index = focusNode.colour
         #create the nodes:
         newNodes = [self.create_node(x, focusNode.d - decay,
-                                     distance=distance_from_branch, colour=colour_index) \
+                                     distance=distance_from_branch, priorNode=focusNode) \
                     for x in newPositions]
         #add the nodes to the graph:
         for x in newNodes:
@@ -198,19 +215,21 @@ class Hyphae:
 
     def backtrack_from_branch(self):
         """ occasionally backtrack from a branch point: """
-        if random() < BRANCH_BACKTRACK_AMNT and bool(self.branchPoints):
+        if random() < constants.BRANCH_BACKTRACK_AMNT and bool(self.branchPoints):
             rndBranch = choice(self.branchPoints)
             assert(rndBranch in self.allNodes)
             rndBranchNode = self.allNodes[rndBranch]
             length_of_branch = rndBranchNode.distance_from_branch
-            branchPoint = BACKTRACK_STEP_NUM(length_of_branch)
+            if length_of_branch < 2:
+                return
+            branchPoint = constants.BACKTRACK_STEP_NUM(length_of_branch)
             currentNodeID = rndBranch
             for x in range(branchPoint):
                 currentNodeID = self.graph.predecessors(currentNodeID)[0]
 
             assert(currentNodeID in self.allNodes)
             potentialNode = self.allNodes[currentNodeID]
-            if potentialNode.open() and len(self.frontier) < MAX_FRONTIER_NODES:
+            if potentialNode.open() and len(self.frontier) < constants.MAX_FRONTIER_NODES:
                 potentialNode.perpendicular = True
                 self.frontier.append(currentNodeID)
 
@@ -247,10 +266,19 @@ class Hyphae:
         focusNode = self.allNodes[focusNodeID]
         newPoint = self.determine_new_point(focusNode)
         newPositions, decay, distance_from_branch = self.split_if_necessary(newPoint, focusNode)
-
         if not self.positions_collide(newPositions, focusNode):
             self.grow_suitable_nodes(newPositions, decay, distance_from_branch, focusNode)
-            self.backtrack_from_branch()
+        elif focusNode.open():
+            focusNode.attempt()
+            self.frontier.append(focusNodeID)
+
+    def backtrack_random(self):
+        if random() < constants.BRANCH_BACKTRACK_AMNT:
+            randNode = choice(list(self.allNodes.values()))
+            if randNode.open() and random() < randNode.backtrack_likelihood:
+                randNode.perpendicular = True
+                self.frontier.append(randNode.id)
+            
             
     def grow_frontier(self):
         """ Grow every node in the frontier in a single step  """
@@ -258,33 +286,26 @@ class Hyphae:
         self.frontier = deque()
         for node in current_frontier:
             self.grow(node)
+            self.backtrack_from_branch()
+            self.backtrack_random()
+
 
             
-    def initialise(self, start_nodes=START_NODES):
-        """ Setup the starting state of the growth """
-        logging.info("Setting up root node")
-        for i, loc in enumerate(start_nodes):
-            self.root_nodes.append(self.create_node(loc, NODE_START_SIZE, colour=i))
 
-    def load(self):
-        raise Exception("Not implemented")
-
-    def save(self):
-        raise Exception("Not implemented")
-            
-
-    def run(self, max_frame=10000):
+    def run(self, max_frames=constants.MAX_GROWTH_STEPS):
+        logging.info("Running Calculation")
         frame_index = 0
         
-        while not self.filter_frontier_to_boundary() and frame_index < MAX_GROWTH_STEPS:
-            self.grow_frontier()
-
+        while not self.filter_frontier_to_boundary() and frame_index < max_frames:
             if self.debug_flag:
-                #trigger debug drawing
-                True
+                self.draw_instance.draw()
+                self.draw_instance.write_file(frame_index)
+
+            self.grow_frontier()
             frame_index += 1
 
         #finished:
         if self.debug_flag:
-            #draw the final output
-            1
+            logging.info("Drawing Debug Final")
+            self.draw_instance.draw()
+            self.draw_instance.write_file()
