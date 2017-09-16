@@ -3,7 +3,7 @@ An re-implementation of inconvergent's hyphae
 """
 from collections import deque
 from numpy.random import random
-from random import choice
+from random import choice, randrange
 from uuid import uuid1
 import cairo_utils as utils
 from cairo_utils import pickles
@@ -21,7 +21,8 @@ logging = root_logger.getLogger(__name__)
 class Hyphae:
     """ A reimplementation of Inconvergent's version of hyphae """
     
-    def __init__(self, debug=False, debug_dir="output", draw_class=None, N=5):
+    def __init__(self, debug=False, debug_dir="output", draw_class=None, N=constants.N):
+        self.time_steps = [set()]
         self.allNodes = {}
         self.branchPoints = []
         #Keep track of nodes in a directed graph
@@ -62,7 +63,6 @@ class Hyphae:
         Create a node, add it to the graph, frontier, and quadtree
         """
         logging.debug("Creating a node for location: {}".format(location))
-
         if priorNode is not None:
             newNode = priorNode.mutate(location, d, distance,
                                        mod_chances=constants.mod_chances)
@@ -74,6 +74,9 @@ class Hyphae:
         self.graph.add_node(newNode.id)
         self.frontier.append(newNode.id)
         self.qtree.insert(item=newNode.id, bbox=newNode.bbox.flatten())
+        #add to the current timestep
+        self.time_steps[-1].add(newNode)
+        
         return newNode
 
     def get_node_neighbourhood(self, node, loc=None):
@@ -101,8 +104,40 @@ class Hyphae:
         logging.debug("Distances: {}".format(distances))
         #filter the frontier:
         self.frontier = deque([x for x, y in paired if y < constants.HYPHAE_CIRC])
-        return len(self.frontier) == 0
+        result = bool(self.frontier)
+        logging.debug("Frontier: {}".format(result))
+        return result
 
+    def backtrack_random(self):
+            randNode = choice(list(self.allNodes.values()))
+            if randNode.open() and random() < randNode.backtrack_likelihood:
+                randNode.perpendicular = True
+                self.frontier.append(randNode.id)
+
+            
+    def backtrack_from_branch(self):
+        """ occasionally backtrack from a branch point: """
+        if bool(self.branchPoints):
+            rndBranch = choice(self.branchPoints)
+            rndBranchNode = self.allNodes[rndBranch]
+            if random() >= rndBranchNode.backtrack_likelihood:
+                return
+            length_of_branch = rndBranchNode.distance
+            if length_of_branch < 2:
+                return
+            branchPoint = randrange(1,length_of_branch)
+            currentNodeID = rndBranch
+            for x in range(branchPoint):
+                currentNodeID = self.graph.predecessors(currentNodeID)[0]
+
+            assert(currentNodeID in self.allNodes)
+            potentialNode = self.allNodes[currentNodeID]
+            if potentialNode.open() and len(self.frontier) < constants.MAX_FRONTIER_NODES:
+                potentialNode.perpendicular = True
+                self.frontier.append(currentNodeID)
+
+
+    
     def determine_new_point(self, node):
         """
         Given a node, calculate a next node location
@@ -136,10 +171,11 @@ class Hyphae:
 
         return newPoint
 
-    def split_if_necessary(self, point, focusNode):
+    def maybe_branch(self, point, focusNode):
         """ Split branch based on split chance """
         assert(isinstance(focusNode, Node))
-        if not focusNode.perpendicular and random() < focusNode.split_chance:
+        if (not focusNode.perpendicular) and focusNode.able_to_branch() and random() < focusNode.split_chance:
+            logging.debug("Branching")
             #branch
             s1 = utils.rotatePoint(point, focusNode.loc,
                                    radMin=-(focusNode.split_angle + focusNode.split_variance), 
@@ -156,16 +192,17 @@ class Hyphae:
             decay = focusNode.size_decay
             distance_from_branch = 0
         elif focusNode.perpendicular:
+            logging.debug("Perpendicular Branching")
             #go perpendicular, with a new branch
             newPositions = [point]
             decay = 0.0
             distance_from_branch = 0
         else:
+            logging.debug("Extending")
             #extend the new branch
             newPositions = [point]
             decay = 0.0
-            distance_from_branch = focusNode.distance_from_branch + 1
-
+            distance_from_branch = focusNode.distance + 1
         return (newPositions, decay, distance_from_branch)
 
 
@@ -196,43 +233,6 @@ class Hyphae:
         
             
         return False
-  
-
-    def grow_suitable_nodes(self, newPositions, decay, distance_from_branch, focusNode):
-        """
-        Create new nodes,  storing any branch points,  and linking the edge to its parent
-        """
-        #create the nodes:
-        newNodes = [self.create_node(x, focusNode.d - decay,
-                                     distance=distance_from_branch, priorNode=focusNode) \
-                    for x in newPositions]
-        #add the nodes to the graph:
-        for x in newNodes:
-            self.graph.add_edge(focusNode.id, x.id)
-        #add branch points to the store:
-        if len(newNodes) > 1:
-            self.branchPoints.append(focusNode.id)
-
-    def backtrack_from_branch(self):
-        """ occasionally backtrack from a branch point: """
-        if random() < constants.BRANCH_BACKTRACK_AMNT and bool(self.branchPoints):
-            rndBranch = choice(self.branchPoints)
-            assert(rndBranch in self.allNodes)
-            rndBranchNode = self.allNodes[rndBranch]
-            length_of_branch = rndBranchNode.distance_from_branch
-            if length_of_branch < 2:
-                return
-            branchPoint = constants.BACKTRACK_STEP_NUM(length_of_branch)
-            currentNodeID = rndBranch
-            for x in range(branchPoint):
-                currentNodeID = self.graph.predecessors(currentNodeID)[0]
-
-            assert(currentNodeID in self.allNodes)
-            potentialNode = self.allNodes[currentNodeID]
-            if potentialNode.open() and len(self.frontier) < constants.MAX_FRONTIER_NODES:
-                potentialNode.perpendicular = True
-                self.frontier.append(currentNodeID)
-
 
     def get_branch_point(self, nodeID):
         """ skip down the successor chain until finding a branch """
@@ -252,6 +252,20 @@ class Hyphae:
             successors = self.graph.successors(successors[0])
         return path
 
+    def grow_suitable_nodes(self, newPositions, decay, distance_from_branch, focusNode):
+        """
+        Create new nodes,  storing any branch points,  and linking the edge to its parent
+        """
+        newNodes = [self.create_node(x, focusNode.d - decay,
+                                     distance=distance_from_branch, priorNode=focusNode) \
+                    for x in newPositions]
+        #add the nodes to the graph:
+        for x in newNodes:
+            self.graph.add_edge(focusNode.id, x.id)
+        #add branch points to the store:
+        if len(newNodes) > 1:
+            self.branchPoints.append(focusNode.id)
+
     def grow(self, node=None):
         """ Grow a single node out """    
         logging.debug("Growing")
@@ -264,21 +278,16 @@ class Hyphae:
             focusNodeID = self.frontier.popleft()
         assert(focusNodeID in self.allNodes)
         focusNode = self.allNodes[focusNodeID]
-        newPoint = self.determine_new_point(focusNode)
-        newPositions, decay, distance_from_branch = self.split_if_necessary(newPoint, focusNode)
-        if not self.positions_collide(newPositions, focusNode):
-            self.grow_suitable_nodes(newPositions, decay, distance_from_branch, focusNode)
-        elif focusNode.open():
-            focusNode.attempt()
-            self.frontier.append(focusNodeID)
-
-    def backtrack_random(self):
-        if random() < constants.BRANCH_BACKTRACK_AMNT:
-            randNode = choice(list(self.allNodes.values()))
-            if randNode.open() and random() < randNode.backtrack_likelihood:
-                randNode.perpendicular = True
-                self.frontier.append(randNode.id)
-            
+        success = False
+        while not success and focusNode.open():
+            newPoint = self.determine_new_point(focusNode)
+            newPositions, decay, distance_from_branch = self.maybe_branch(newPoint, focusNode)
+            if not self.positions_collide(newPositions, focusNode):
+                self.grow_suitable_nodes(newPositions, decay, distance_from_branch, focusNode)
+                focusNode.force_open()
+                success = True
+            else:
+                focusNode.attempt()            
             
     def grow_frontier(self):
         """ Grow every node in the frontier in a single step  """
@@ -286,17 +295,20 @@ class Hyphae:
         self.frontier = deque()
         for node in current_frontier:
             self.grow(node)
+        for x in range(constants.backtrack_attempts):
             self.backtrack_from_branch()
             self.backtrack_random()
 
-
+    def inc_time_steps(self):
+        self.time_steps.append(set())
             
-
     def run(self, max_frames=constants.MAX_GROWTH_STEPS):
         logging.info("Running Calculation")
         frame_index = 0
-        
-        while not self.filter_frontier_to_boundary() and frame_index < max_frames:
+        while self.filter_frontier_to_boundary() and frame_index < max_frames:
+            if frame_index % 10 == 0:
+                logging.info("Frame: {}".format(frame_index))
+            self.inc_time_steps()
             if self.debug_flag:
                 self.draw_instance.draw()
                 self.draw_instance.write_file(frame_index)
