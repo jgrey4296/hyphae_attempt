@@ -10,7 +10,7 @@ clean:
 	-rm imgs/*.png
 	-rm *.gif
 
-gif: .PHONY clean backup
+gif: .PHONY backup clean
 	python main.py -gif
 	open ./
 
