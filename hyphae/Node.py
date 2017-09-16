@@ -17,17 +17,17 @@ class Node:
         self.id = uuid1()
         self.loc = loc
         self.d = d #diameter
+        #distance from branch:
         self.distance = distance
         self.remaining = constants.MAX_ATTEMPTS_PER_NODE
         self.perpendicular = perpendicular
-        self.distance_from_branch = 0
         self.colour = colour
         self.bbox = np.row_stack((self.loc - self.d,
                                   self.loc + self.d))
 
         self.size_decay = constants.NODE_SIZE_DECAY
 
-        self.backtrack_likelihood = randf()
+        self.backtrack_likelihood = constants.BACKTRACK_LIKELIHOOD
         
         #delta in space
         self.delta = constants.NEIGHBOUR_DELTA
@@ -51,15 +51,21 @@ class Node:
             mod = np.interp(randf(4), (0,1), constants.mut_c_range)
             #don't mod alpha
             alpha = self.colour[3]
-            new_colour = np.interp(self.colour + mod, [0,1],[0.1,1])
+            #clamp
+            new_colour = np.interp(self.colour + mod, [0.1,1],[0.1,1])
             new_colour[3] = alpha
             newNode.colour = new_colour
+        else:
+            #if not modifying, copy
+            newNode.colour = self.colour
             
         #mutate delta?
         if randf() < mod_chances[1]:
             mod = np.interp(randf(), (0, 1), constants.mut_d_range)
             newDelta = clamp(self.delta + mod, *constants.DELTA_CLAMP)
             newNode.delta = newDelta
+        else:
+            newNode.delta = self.delta
             
         #mutate wiggle?
         if randf() < mod_chances[2]:
@@ -72,6 +78,10 @@ class Node:
             #var
             wiggle_var_mod = np.interp(randf(), (0,1), constants.mut_wvr)
             newNode.wiggle_variance = constants.rad_clamp(self.wiggle_variance + wiggle_var_mod) 
+        else:
+            newNode.wiggle_chance = self.wiggle_chance
+            newNode.wiggle_amnt = self.wiggle_amnt
+            newNode.wiggle_variance = self.wiggle_variance
             
 
         #mutate split?
@@ -86,8 +96,16 @@ class Node:
             #var
             split_var_mod = np.interp(randf(), (0,1), constants.mut_svr)
             newNode.split_variance = constants.rad_clamp(self.split_variance + split_var_mod) 
-
-
+        else:
+            newNode.split_chance = self.split_chance
+            newNode.split_angle = self.split_angle
+            newNode.split_variance = self.split_variance
+            
+        if randf() < mod_chances[4]:
+            newBackTrackChance = np.interp(randf(), (0,1), constants.mut_btc)
+            newNode.backtrack_likelihood = clamp(self.backtrack_likelihood + newBackTrackChance)
+        else:
+            newNode.backtrack_likelihood = self.backtrack_likelihood
             
         return newNode
         
@@ -119,3 +137,9 @@ class Node:
 
     def open(self):
         return bool(self.remaining)
+
+    def force_open(self):
+        self.remaining = constants.MAX_ATTEMPTS_PER_NODE
+    
+    def able_to_branch(self):
+        return self.distance > constants.MIN_BRANCH_LENGTH
