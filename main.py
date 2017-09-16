@@ -29,14 +29,12 @@ logging = root_logger.getLogger(__name__)
 
 DEBUG=True
 DRAW_CLASS = LinePaths #StraightPaths, LinePaths, NodePaths, NodePathsAlt
-N=10
-
 MAKE_GIF = '-gif' in sys.argv
 
 ########################################
 if __name__ == "__main__":
     logging.info("Starting ")
-    hyphae_instance = Hyphae(debug=DEBUG, draw_class=DRAW_CLASS, N=N)
+    hyphae_instance = Hyphae(debug=DEBUG, draw_class=DRAW_CLASS)
     hyphae_instance.initialise()
     hyphae_instance.run()
     hyphae_instance.save()
