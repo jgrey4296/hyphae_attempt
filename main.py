@@ -7,8 +7,13 @@
 ####################
 # Setup root_logger:
 import logging as root_logger
-import hyphae
-
+import numpy as np
+from hyphae import Hyphae
+from hyphae.drawing import StraightPaths, LinePaths, NodePaths, NodePathsAlt
+from hyphae import constants
+from os.path import join, isfile, exists, isdir, splitext, expanduser
+import sys
+from cairo_utils.make_gif import Make_Gif
 #Log Setup
 LOGLEVEL = root_logger.DEBUG
 LOG_FILE_NAME = "log.hyphae"
@@ -22,10 +27,21 @@ logging = root_logger.getLogger(__name__)
 # CONSTANTS
 ####################
 
-DEBUG=False
+DEBUG=True
+DRAW_CLASS = LinePaths #StraightPaths, LinePaths, NodePaths, NodePathsAlt
+N=10
+
+MAKE_GIF = '-gif' in sys.argv
 
 ########################################
 if __name__ == "__main__":
     logging.info("Starting ")
-    hyphae_instance = hyphae(debug=DEBUG)
-    hyphae.initialise()
+    hyphae_instance = Hyphae(debug=DEBUG, draw_class=DRAW_CLASS, N=N)
+    hyphae_instance.initialise()
+    hyphae_instance.run()
+    hyphae_instance.save()
+    if MAKE_GIF:
+        maker = Make_Gif(source_dir="imgs")
+        maker.run()
+
+    
