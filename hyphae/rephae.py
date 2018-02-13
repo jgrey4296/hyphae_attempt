@@ -38,7 +38,7 @@ ctx.scale(X,Y) #coords in 0-1 range
 ##############################
 # VARIABLES
 ####################
-allNodes, graph = utils.load_pickled_graph(PICKLE_NAME,PICKLE_DIR)
+allNodes, graph = utils.pickles.load_pickled_graph(PICKLE_NAME,PICKLE_DIR)
 
 ##############################
 # Utilities

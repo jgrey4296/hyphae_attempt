@@ -13,7 +13,7 @@ class StraightPaths(Hyphae_Draw):
         
     def draw(self):
         """ An alternate draw routine, drawing lines for branches """    
-        utils.clear_canvas(self.ctx)
+        utils.drawing.clear_canvas(self.ctx)
         nodes = deque([x.id for x in self.instance.root_nodes])
         while len(nodes) > 0:
             currentID = nodes.popleft()
@@ -23,7 +23,7 @@ class StraightPaths(Hyphae_Draw):
         
             self.ctx.set_source_rgba(*currentNode.colour)
             self.ctx.set_line_width(LINE_WIDTH)
-            utils.drawCircle(self.ctx, *currentNode.loc, currentNode.d - SIZE_DIFF)
+            utils.drawing.drawCircle(self.ctx, *currentNode.loc, currentNode.d - SIZE_DIFF)
             self.ctx.move_to(*currentNode.loc)
             self.ctx.line_to(*branchNode.loc)
             self.ctx.stroke()

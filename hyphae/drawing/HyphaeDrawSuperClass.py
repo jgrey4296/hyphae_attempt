@@ -9,7 +9,7 @@ class Hyphae_Draw:
         assert(hyphae_instance is not None)
         self.instance = hyphae_instance
         #setup the surface, ctx, size etc
-        surf, ctx, size, n = utils.setup_cairo(N=N)
+        surf, ctx, size, n = utils.drawing.setup_cairo(N=N)
         self.surface = surf
         self.ctx = ctx
         self.size = size
@@ -21,4 +21,4 @@ class Hyphae_Draw:
 
 
     def write_file(self, i=None):
-        utils.write_to_png(self.surface, join(OUTPUT_DIR, self.filename), i=i)
+        utils.drawing.write_to_png(self.surface, join(OUTPUT_DIR, self.filename), i=i)

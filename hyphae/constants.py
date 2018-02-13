@@ -3,7 +3,7 @@ from random import randrange
 from numpy.random import random
 import numpy.random as rand
 import math
-from cairo_utils import clamp, get_distance
+from cairo_utils.math import clamp, get_distance
 
 ##############################
 #CONSTANTS:

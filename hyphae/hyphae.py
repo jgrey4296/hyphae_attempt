@@ -165,7 +165,7 @@ class Hyphae:
             normalized = predecessor.get_normal(node)
             newPoint = node.move(normalized)
             if random() < node.wiggle_chance:
-                newPoint = utils.rotatePoint(newPoint, node.loc, 
+                newPoint = utils.math.rotatePoint(newPoint, node.loc, 
                                              radMin=-(node.wiggle_amnt + node.wiggle_variance), 
                                              radMax=(node.wiggle_amnt + node.wiggle_variance))
 
@@ -177,10 +177,10 @@ class Hyphae:
         if (not focusNode.perpendicular) and focusNode.able_to_branch() and random() < focusNode.split_chance:
             logging.debug("Branching")
             #branch
-            s1 = utils.rotatePoint(point, focusNode.loc,
+            s1 = utils.math.rotatePoint(point, focusNode.loc,
                                    radMin=-(focusNode.split_angle + focusNode.split_variance), 
                                    radMax=-(focusNode.split_angle - focusNode.split_variance))
-            s2 = utils.rotatePoint(point, focusNode.loc,
+            s2 = utils.math.rotatePoint(point, focusNode.loc,
                                    radMin=focusNode.split_angle - focusNode.split_variance, 
                                    radMax=focusNode.split_angle + focusNode.split_variance)
             #todo: figure out whats going on here
@@ -227,7 +227,7 @@ class Hyphae:
                     self.frontier.append(focusNode.id)
                 return True
 
-            distances_to_other_new_pos = [utils.get_distance(pos,x) for x in positions if all(x != pos)]
+            distances_to_other_new_pos = [utils.math.get_distance(pos,x) for x in positions if all(x != pos)]
             if any([x < fNodeDist for x in distances_to_other_new_pos]):
                 return True
         

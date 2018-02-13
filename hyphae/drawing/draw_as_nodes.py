@@ -24,6 +24,6 @@ class NodePaths(Hyphae_Draw):
             #draw the node / line
             self.ctx.set_source_rgba(*currentNode.colour)
             logging.debug("Circle: {:.2f},  {:.2f}".format(*currentNode.loc))
-            utils.drawCircle(self.ctx, *currentNode.loc, currentNode.d - SIZE_DIFF)
+            utils.drawing.drawCircle(self.ctx, *currentNode.loc, currentNode.d - SIZE_DIFF)
             #get it's children
             #nodes.extend(self.instance.graph.successors(currentID))
